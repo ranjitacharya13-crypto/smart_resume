@@ -19,7 +19,7 @@ The server is intentionally CPU-first: hashed vectors are 256 dimensions and mat
 
 ## Production TRM path
 
-Train a ~7M PyTorch shared-weight recursive encoder with labelled `(resume, JD, recruiter outcome)` pairs. Strip names, contact details, age/date proxies and protected attributes before training. Split by job and time, calibrate probabilities, compare to non-recursive baselines, audit subgroup outcomes where lawful, and version model/data/evaluation reports. Replace `RecursiveMatcher` behind `MatcherProtocol`; retain the output contract (`score`, factors, strengths, gaps, refinement trace). Human approval remains mandatory.
+Train a ~7M **JAX/Flax** shared-weight recursive encoder with labelled `(resume, JD, recruiter outcome)` pairs. Strip names, contact details, age/date proxies and protected attributes before training. Split by job and time, calibrate probabilities, compare to non-recursive baselines, audit subgroup outcomes where lawful, and version model/data/evaluation reports. Replace the `recursive_scores` function / `RecursiveMatcher` behind `MatcherProtocol`; retain the output contract (`score`, factors, strengths, gaps, refinement trace). Human approval remains mandatory.
 
 ## Supabase schema
 

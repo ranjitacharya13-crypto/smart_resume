@@ -1,6 +1,6 @@
 # SmartHire AI
 
-CPU-friendly, explainable resume screening with a recursive matching model. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data flow, deployment, and training plan.
+CPU-friendly, explainable resume screening with a JAX-powered recursive matching model. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data flow, deployment, and training plan.
 
 ## Run locally
 
