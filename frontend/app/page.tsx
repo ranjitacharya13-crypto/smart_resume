@@ -1,38 +1,278 @@
-'use client';
-import { useState } from 'react';
+﻿'use client';
+import { type ChangeEvent, useMemo, useState } from 'react';
 
-const API=process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-type Breakdown={label:string;weight:number;points:number;detail:string};
-type Review={evidence_found:string[];resume_edits:string[];growth_plan:string[];research_topics:string[]};
-type Details={score_interpretation:string[];resume_blueprint:string[];interview_preparation:string[];mentor_narrative:string;evidence_limitations:string};
-type Candidate={id:number;name:string;score:number;strengths:string[];gaps:string[];skill_relevance:number;experience_alignment:number;qualification_match:number;recommendation:string;score_context:string;score_breakdown:Breakdown[];deep_resume_review:Review;detailed_explanation:Details;refinement_trace:{pass:number;score:number}[]};
-const emptyReview={evidence_found:[],resume_edits:[],growth_plan:[],research_topics:[]};
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+type Breakdown = { label: string; weight: number; points: number; detail: string };
+type Review = { evidence_found: string[]; resume_edits: string[]; growth_plan: string[]; research_topics: string[] };
+type Details = { score_interpretation: string[]; resume_blueprint: string[]; interview_preparation: string[]; mentor_narrative: string; evidence_limitations: string };
+type Candidate = { id: number; name: string; score: number; strengths: string[]; gaps: string[]; skill_relevance: number; experience_alignment: number; qualification_match: number; recommendation: string; score_context: string; score_breakdown: Breakdown[]; deep_resume_review: Review; detailed_explanation: Details; refinement_trace: { pass: number; score: number }[] };
 
-export default function Home(){
- const [job,setJob]=useState<number|null>(null),[title,setTitle]=useState(''),[description,setDescription]=useState(''),[files,setFiles]=useState<FileList|null>(null),[list,setList]=useState<Candidate[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
- async function run(){try{setBusy(true);setError('');const jd=new FormData();jd.append('title',title);jd.append('description',description);let r=await fetch(`${API}/jobs`,{method:'POST',body:jd});if(!r.ok)throw Error(await r.text());const j=await r.json();setJob(j.id);if(files?.length){const f=new FormData();Array.from(files).forEach(x=>f.append('files',x));r=await fetch(`${API}/jobs/${j.id}/resumes`,{method:'POST',body:f});if(!r.ok)throw Error(await r.text())}r=await fetch(`${API}/jobs/${j.id}/shortlist`);if(!r.ok)throw Error(await r.text());setList((await r.json()).candidates)}catch(e){setError(e instanceof Error?e.message:'Request failed')}finally{setBusy(false)}}
- return (
-  <main className="art-shell px-4 py-8 sm:px-8 lg:px-12">
-   <div className="art-blob -left-32 top-12 h-96 w-96 bg-rose-200/70"/>
-   <div className="art-blob right-0 top-20 h-96 w-96 bg-cyan-200/70"/>
-   <div className="art-blob bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 bg-violet-200/50"/>
-   <div className="relative z-10 mx-auto max-w-6xl">
-    <nav className="art-panel mb-14 flex items-center justify-between px-5 py-3.5">
-     <div className="flex items-center gap-3 text-slate-900"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-rose-400 via-orange-400 to-violet-500 text-sm font-black text-white shadow-md">S</span><span className="text-lg font-extrabold tracking-tight">SmartHire</span></div>
-     <span className="hidden items-center gap-2 text-xs font-semibold text-slate-500 sm:flex"><i className="h-2 w-2 rounded-full bg-emerald-400"/>AI screening workspace</span>
-    </nav>
-    <section className="mb-10 grid items-end gap-8 lg:grid-cols-[1fr_1.1fr]"><div className="max-w-xl"><p className="mono mb-4 text-xs font-semibold uppercase tracking-[.18em] text-rose-600">Decisions, backed by evidence</p><h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl xl:text-6xl">Turn a stack of resumes into a <span className="bg-gradient-to-r from-rose-500 via-orange-500 to-violet-600 bg-clip-text text-transparent">clear shortlist.</span></h1><p className="mt-5 max-w-lg text-base leading-7 text-slate-600">Add a role and candidate files. Get an evidence-led ranking plus practical coaching for every applicant.</p><div className="mt-7 flex flex-wrap gap-3 text-xs font-medium text-slate-600"><Badge text="Skills mapped"/><Badge text="Experience weighted"/><Badge text="Transparent scores"/></div></div>
-    <section className="art-panel p-5 sm:p-7"><div className="mb-6 flex items-start justify-between"><div><p className="mono text-[11px] font-bold uppercase tracking-[.14em] text-violet-600">New search</p><h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">Create a shortlist</h2></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-lg text-rose-600">✦</span></div><div className="grid gap-4"><Field label="Role title"><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Senior Backend Engineer" className="input"/></Field><Field label="Job description"><textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Paste requirements, key skills, and experience…" className="input min-h-28 resize-y"/></Field><label className="block cursor-pointer rounded-[22px] border border-dashed border-rose-200 bg-white/80 px-4 py-3 transition hover:border-violet-400 hover:bg-violet-50"><span className="block text-sm font-bold text-slate-700">Upload resumes <span className="font-normal text-slate-400">· PDF, DOCX, or TXT</span></span><input className="mt-2 block w-full cursor-pointer text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-violet-700 file:shadow-sm" type="file" multiple accept=".pdf,.docx,.txt" onChange={e=>setFiles(e.target.files)}/></label><button disabled={busy||!title||!description} onClick={run} className="art-button mt-1">{busy?<><Spinner/> Screening candidates…</>:<>Build ranked shortlist <span>→</span></>}</button>{error&&<p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-sm font-medium text-rose-700">{error}</p>}</div></section></section>
-    {job&&<section className="pb-8"><div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="mono text-[11px] font-bold uppercase tracking-[.14em] text-rose-600">Review queue</p><h2 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">Ranked candidates</h2></div><span className="rounded-full border border-rose-200/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-600">Job #{job} · recruiter review required</span></div>{list.length===0?<div className="art-panel border-dashed border-rose-200/80 bg-white/70 p-8 text-center text-sm text-slate-500">Your files are in—upload resumes to see the shortlist.</div>:<div className="grid gap-4">{list.map((c,i)=><CandidateCard key={c.id} c={c} i={i}/>)}</div>}</section>}
-   </div>
-  </main>
- );
+const emptyReview = { evidence_found: [], resume_edits: [], growth_plan: [], research_topics: [] };
+
+export default function Home() {
+  const [job, setJob] = useState<number | null>(null);
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [list, setList] = useState<Candidate[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('Drop in resumes and let the constellation reveal the strongest fit.');
+
+  const fileSummary = useMemo(() => {
+    if (!files || files.length === 0) return 'No resumes selected yet';
+    return `${files.length} resume${files.length > 1 ? 's' : ''} detected`;
+  }, [files]);
+
+  async function analyzeSelected(selectedFiles: FileList | null) {
+    if (!selectedFiles?.length) {
+      setError('Upload at least one resume to begin.');
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError('');
+      setStatusMessage('Reading the documents and mapping the strongest signals...');
+
+      const title = 'Resume screening';
+      const description = `Auto-detected from uploaded resumes: ${Array.from(selectedFiles).map((file) => file.name).join(', ')}`;
+
+      const jd = new FormData();
+      jd.append('title', title);
+      jd.append('description', description);
+
+      let response = await fetch(`${API}/jobs`, { method: 'POST', body: jd });
+      if (!response.ok) throw new Error(await response.text());
+
+      const jobData = await response.json();
+      setJob(jobData.id);
+
+      const uploadForm = new FormData();
+      Array.from(selectedFiles).forEach((file) => uploadForm.append('files', file));
+      response = await fetch(`${API}/jobs/${jobData.id}/resumes`, { method: 'POST', body: uploadForm });
+      if (!response.ok) throw new Error(await response.text());
+
+      response = await fetch(`${API}/jobs/${jobData.id}/shortlist`);
+      if (!response.ok) throw new Error(await response.text());
+
+      const payload = await response.json();
+      setList(payload.candidates || []);
+      setStatusMessage(payload.candidates?.length ? 'The constellation is complete — here is the guided shortlist.' : 'The resumes were reviewed and mapped, but no candidates surfaced yet.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Request failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = event.target.files;
+    setFiles(selectedFiles);
+    if (selectedFiles?.length) {
+      setStatusMessage(`Resume detected — ${selectedFiles.length} document${selectedFiles.length > 1 ? 's' : ''} prepared for review.`);
+      void analyzeSelected(selectedFiles);
+    }
+  }
+
+  return (
+    <main className="art-shell min-h-screen px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+        <nav className="art-panel flex items-center justify-between px-5 py-3.5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-sky-500 text-sm font-black text-white shadow-lg shadow-violet-200">R</span>
+            <div>
+              <p className="text-lg font-black tracking-tight text-slate-900">ResumeScreening.ai</p>
+              <p className="text-xs font-medium text-slate-500">Talent constellation map</p>
+            </div>
+          </div>
+          <div className="hidden items-center gap-2 rounded-full border border-violet-100 bg-violet-50/80 px-3 py-1.5 text-xs font-semibold text-violet-700 sm:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            Mentor-led review ready
+          </div>
+        </nav>
+
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="art-panel p-7 sm:p-8">
+            <p className="mono text-[11px] font-semibold uppercase tracking-[0.3em] text-violet-600">Ethereal hiring lens</p>
+            <h1 className="mt-3 text-4xl font-black leading-[1.05] tracking-tight text-slate-900 sm:text-5xl">
+              Let each resume become a <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-sky-600 bg-clip-text text-transparent">clear signal</span>.
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+              Upload a candidate file and let the workspace read the experience, strengths, and growth edges with a calm, professional voice—like a mentor guiding you to the right next move.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Badge text="Auto-detected resumes" />
+              <Badge text="Mentor guidance" />
+              <Badge text="Lightweight review" />
+            </div>
+
+            <div className="mt-8 rounded-[24px] border border-violet-100 bg-gradient-to-br from-white via-violet-50/70 to-sky-50 p-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Current signal</p>
+                  <p className="text-sm text-slate-500">{statusMessage}</p>
+                </div>
+                <span className="rounded-full border border-violet-100 bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
+                  {fileSummary}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="art-panel p-6 sm:p-7">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="mono text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">Workspace</p>
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Upload and review</h2>
+              </div>
+              <div className="rounded-2xl border border-violet-100 bg-violet-50/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
+                Instant read
+              </div>
+            </div>
+
+            <label className="mt-6 flex min-h-[250px] cursor-pointer flex-col items-center justify-center rounded-[28px] border border-dashed border-violet-200 bg-gradient-to-br from-white via-violet-50/80 to-sky-50 px-6 py-8 text-center transition hover:border-violet-400 hover:shadow-lg hover:shadow-violet-100">
+              <input className="sr-only" type="file" multiple accept=".pdf,.docx,.txt" onChange={handleFileSelection} />
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl shadow-sm">☁</div>
+              <p className="mt-4 text-lg font-semibold text-slate-800">Drop resumes here</p>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">The system will detect the resume content, read the narrative, and explain the fit like a seasoned mentor.</p>
+            </label>
+
+            <button disabled={busy || !files?.length} onClick={() => void analyzeSelected(files)} className="art-button mt-5 w-full">
+              {busy ? <><Spinner /> Reading resumes…</> : <>Reveal the shortlist</>}
+            </button>
+
+            {error ? <p role="alert" className="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-sm font-medium text-rose-700">{error}</p> : null}
+          </div>
+        </section>
+
+        {job ? (
+          <section className="art-panel p-6 sm:p-7">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="mono text-[11px] font-semibold uppercase tracking-[0.3em] text-violet-600">Starlight results</p>
+                <h2 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Shortlisted candidates</h2>
+              </div>
+              <div className="rounded-full border border-violet-100 bg-violet-50/80 px-3 py-1.5 text-sm font-semibold text-violet-700">
+                {list.length} reviewed • mentor notes ready
+              </div>
+            </div>
+
+            {list.length ? (
+              <div className="mt-6 grid gap-4 xl:grid-cols-2">
+                {list.map((candidate, index) => (
+                  <CandidateCard key={candidate.id} c={candidate} i={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 rounded-[24px] border border-dashed border-violet-200 bg-violet-50/40 p-8 text-center text-sm text-slate-500">
+                The analysis has started. The shortlist will appear here as soon as the resume signals are mapped.
+              </div>
+            )}
+          </section>
+        ) : null}
+      </div>
+    </main>
+  );
 }
-function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="block text-sm font-bold text-slate-700"><span className="mb-1.5 block text-slate-800">{label}</span>{children}</label>}
-function Badge({text}:{text:string}){return <span className="art-pill">✓ {text}</span>}
-function Spinner(){return <i className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"/>}
-function CandidateCard({c,i}:{c:Candidate;i:number}){const review=c.deep_resume_review||emptyReview;const details=c.detailed_explanation;return <article className="art-card transition hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(244,114,182,0.12)]"><div className="flex flex-wrap items-start gap-4"><span className="mono grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-sm font-bold text-rose-600">{String(i+1).padStart(2,'0')}</span><div className="min-w-44 flex-1"><h3 className="text-lg font-extrabold text-slate-900">{c.name}</h3><p className="mt-0.5 text-xs font-medium text-slate-500">{c.recommendation||'Recruiter review required'}</p></div><div className="rounded-[20px] bg-gradient-to-br from-rose-500 via-orange-500 to-violet-600 px-4 py-2 text-center text-white shadow-md"><strong className="block text-xl leading-5">{c.score}%</strong><span className="text-[10px] font-bold uppercase tracking-wider text-white/80">Match score</span></div></div><div className="mt-6 grid gap-4 md:grid-cols-3"><Metric n="Skills" v={c.skill_relevance}/><Metric n="Experience" v={c.experience_alignment}/><Metric n="Qualifications" v={c.qualification_match}/></div><div className="mt-6 grid gap-4 border-t border-slate-100 pt-5 md:grid-cols-2"><Evidence title="Strengths" items={c.strengths} good/><Evidence title="Watch-outs" items={c.gaps}/></div><section className="mt-6 rounded-[22px] border border-rose-200/80 bg-gradient-to-br from-rose-50 via-orange-50 to-violet-50 p-4"><h4 className="text-sm font-extrabold text-slate-900">Mentor score review</h4><p className="mt-1 text-sm leading-6 text-slate-600">{c.score_context}</p><div className="mt-4 grid gap-2">{(c.score_breakdown||[]).map(x=><div className="flex flex-wrap justify-between gap-2 rounded-2xl bg-white/80 px-3 py-2 text-xs shadow-sm" key={x.label}><span><b className="text-slate-800">{x.label}</b> <span className="text-slate-500">({x.weight}% weight) · {x.detail}</span></span><strong className="text-violet-700">{x.points}/{x.weight} pts</strong></div>)}</div><Coach title="Evidence found" items={review.evidence_found}/><Coach title="Make the resume stronger" items={review.resume_edits}/><Coach title="Build real capability" items={review.growth_plan}/>{review.research_topics.length>0&&<div className="mt-4"><h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Research role skills</h4><div className="mt-2 flex flex-wrap gap-2">{review.research_topics.map(x=><a className="rounded-md bg-white px-2.5 py-1.5 text-xs font-bold text-indigo-700 shadow-sm hover:bg-indigo-100" target="_blank" rel="noreferrer" href={`https://www.google.com/search?q=${encodeURIComponent(`${x} official documentation tutorial`)}`} key={x}>Learn {x} →</a>)}</div></div>}<Detailed details={details}/></section><details className="mt-5 text-sm"><summary className="cursor-pointer font-bold text-indigo-700 marker:text-indigo-400">View {c.refinement_trace.length}-pass reasoning trace</summary><div className="mt-3 flex flex-wrap gap-2">{c.refinement_trace.map(t=><span className="mono rounded-md bg-slate-100 px-2.5 py-1.5 text-xs text-slate-600" key={t.pass}>Pass {t.pass}: <b>{t.score}%</b></span>)}</div></details></article>}
-function Metric({n,v}:{n:string;v:number}){return <div><div className="mb-2 flex justify-between text-xs"><span className="font-semibold text-slate-500">{n}</span><b className="text-slate-700">{v}%</b></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-rose-400 via-orange-400 to-violet-500" style={{width:`${v}%`}}/></div></div>}
-function Evidence({title,items,good=false}:{title:string;items:string[];good?:boolean}){return <div><h4 className="mb-2 text-[11px] font-extrabold uppercase tracking-[.12em] text-slate-400">{title}</h4><div className="flex flex-wrap gap-2">{items.length?items.map(x=><span key={x} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${good?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}`}>{good?'✓':'!'} {x}</span>):<span className="text-xs text-slate-500">{good?'No evidence captured':'No gaps detected from stated requirements'}</span>}</div></div>}
-function Coach({title,items}:{title:string;items:string[]}){return items.length?<div className="mt-4"><h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">{title}</h4><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">{items.map(x=><li key={x}>{x}</li>)}</ul></div>:null}
-function Detailed({details}:{details:Details|undefined}){return details?<details className="mt-4 rounded-[20px] border border-rose-200/80 bg-white/80 p-3 text-sm shadow-sm"><summary className="cursor-pointer font-bold text-violet-700">Read the full mentor explanation</summary><p className="mt-3 leading-6 text-slate-600">{details.mentor_narrative}</p><Coach title="What this score means" items={details.score_interpretation}/><Coach title="Resume blueprint" items={details.resume_blueprint}/><Coach title="Interview preparation" items={details.interview_preparation}/><p className="mt-3 text-xs text-slate-500">{details.evidence_limitations}</p></details>:null}
+
+function Badge({ text }: { text: string }) {
+  return <span className="art-pill">✦ {text}</span>;
+}
+
+function Spinner() {
+  return <i className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />;
+}
+
+function CandidateCard({ c, i }: { c: Candidate; i: number }) {
+  const details = c.detailed_explanation;
+  const review = c.deep_resume_review || emptyReview;
+
+  return (
+    <article className="rounded-[28px] border border-violet-100 bg-gradient-to-br from-white via-violet-50/70 to-sky-50 p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-violet-500">{String(i + 1).padStart(2, '0')} · {c.recommendation}</p>
+          <h3 className="mt-1 text-xl font-black text-slate-900">{c.name}</h3>
+        </div>
+        <div className="rounded-[20px] border border-violet-100 bg-white/90 px-4 py-3 text-center shadow-sm">
+          <div className="text-3xl font-black text-slate-900">{c.score}%</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-500">Signal strength</div>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-[20px] border border-white/80 bg-white/80 p-4 text-sm leading-6 text-slate-600">
+        {c.score_context}
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <Metric n="Skills" v={c.skill_relevance} />
+        <Metric n="Experience" v={c.experience_alignment} />
+        <Metric n="Qualifications" v={c.qualification_match} />
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <Insight title="Strengths" items={c.strengths} good />
+        <Insight title="Needs attention" items={c.gaps} />
+      </div>
+
+      <div className="mt-5 rounded-[20px] border border-violet-100 bg-white/80 p-4">
+        <p className="text-sm font-semibold text-slate-700">Mentor guidance</p>
+        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+          {(details?.resume_blueprint?.slice(0, 2) || []).map((item) => <li key={item}>• {item}</li>)}
+          {(details?.interview_preparation?.slice(0, 2) || []).map((item) => <li key={item}>• {item}</li>)}
+          {!details?.resume_blueprint?.length && !details?.interview_preparation?.length ? <li>• The profile appears strong, but a sharper story and tailored examples would make it easier to trust.</li> : null}
+        </ul>
+      </div>
+
+      <details className="mt-4 rounded-[20px] border border-violet-100 bg-white/80 p-3 text-sm shadow-sm">
+        <summary className="cursor-pointer font-semibold text-violet-700">Read the professional breakdown</summary>
+        <div className="mt-3 space-y-3 text-slate-600">
+          <p>{details?.mentor_narrative}</p>
+          <Coach title="Evidence gathered" items={review.evidence_found} />
+          <Coach title="Resume edits to make" items={review.resume_edits} />
+          <Coach title="Growth plan" items={review.growth_plan} />
+          <Coach title="Research topics" items={review.research_topics} />
+        </div>
+      </details>
+    </article>
+  );
+}
+
+function Metric({ n, v }: { n: string; v: number }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
+        <span>{n}</span>
+        <span className="text-slate-700">{v}%</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-sky-500" style={{ width: `${v}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function Insight({ title, items, good = false }: { title: string; items: string[]; good?: boolean }) {
+  return (
+    <div>
+      <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</h4>
+      <div className="flex flex-wrap gap-2">
+        {items.length ? items.map((item) => (
+          <span key={item} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${good ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+            {good ? '✓' : '!'} {item}
+          </span>
+        )) : <span className="text-xs text-slate-500">No notes surfaced here.</span>}
+      </div>
+    </div>
+  );
+}
+
+function Coach({ title, items }: { title: string; items: string[] }) {
+  return items.length ? (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</h4>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+        {items.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </div>
+  ) : null;
+}
