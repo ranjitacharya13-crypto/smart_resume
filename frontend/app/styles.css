@@ -2,6 +2,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@layer base { * { @apply box-border; } body { @apply min-h-screen bg-[#fffaf4] font-sans text-slate-900 antialiased; } }
-@layer components { .input { @apply block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10; } }
+@layer base { * { @apply box-border; } body { @apply min-h-screen bg-[linear-gradient(135deg,#fffdf8_0%,#fff5eb_45%,#f9f5ff_100%)] font-sans text-slate-900 antialiased; } }
+@layer components {
+  .input { @apply block w-full rounded-[18px] border border-stone-200 bg-white/80 px-3.5 py-2.5 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100; }
+  .art-shell { position: relative; background: linear-gradient(135deg, #fffdf8 0%, #fff7eb 45%, #f8f4ff 100%); }
+  .art-blob { position: absolute; z-index: 0; border-radius: 9999px; filter: blur(70px); opacity: 0.8; }
+  .art-panel { border: 1px solid rgba(255,255,255,0.7); background: rgba(255,255,255,0.82); box-shadow: 0 20px 60px rgba(15,23,42,0.06); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-radius: 28px; }
+  .art-card { border: 1px solid rgba(244,114,182,0.15); background: linear-gradient(145deg, #ffffff 0%, #fffdf9 100%); box-shadow: 0 18px 45px rgba(15,23,42,0.06); border-radius: 24px; }
+  .art-pill { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 9999px; border: 1px solid rgba(244,114,182,0.25); background: rgba(255,245,247,0.9); padding: 0.55rem 0.8rem; box-shadow: 0 8px 20px rgba(244,114,182,0.08); font-size: 0.75rem; font-weight: 700; color: #be185d; text-transform: uppercase; letter-spacing: 0.12em; }
+  .art-button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 9999px; background: linear-gradient(135deg, #fb7185 0%, #f59e0b 35%, #8b5cf6 100%); padding: 0.9rem 1.2rem; font-size: 0.95rem; font-weight: 700; color: #fff; box-shadow: 0 16px 36px rgba(139,92,246,0.18); transition: transform 180ms ease, box-shadow 180ms ease; }
+  .art-button:hover { transform: translateY(-1px); box-shadow: 0 20px 44px rgba(244,114,182,0.2); }
+}
 @layer utilities { .mono { font-family: 'DM Mono', monospace; } }
